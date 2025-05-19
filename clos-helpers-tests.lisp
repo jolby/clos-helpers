@@ -234,6 +234,81 @@
         (com.evocomputing.clos-helpers:all-initarg-writer-pairs simple-class)
         "ALL-INITARG-WRITER-PAIRS on simple class")))
 
+;; Test shallow-copy
+(define-test shallow-copy-tests
+  :parent clos-helpers-suite
+  (finalize-test-classes)
+  (let* ((original (make-instance 'subclass-test-class
+                                  :base-slot-1 "base-val-1"
+                                  :base-slot-2 "base-val-2"
+                                  :base-slot-3 "base-val-3"
+                                  :sub-slot-1 "sub-val-1"))
+         (copy (com.evocomputing.clos-helpers:shallow-copy original)))
+
+    (false (eq original copy) "Shallow copy creates a new instance")
+    (is equal (com.evocomputing.clos-helpers:to-alist original)
+          (com.evocomputing.clos-helpers:to-alist copy)
+          "Shallow copy has the same slot values initially")
+
+    ;; Test modifying a simple slot in the copy
+    (setf (base-slot-1 copy) "modified-val")
+    (is equal "modified-val" (base-slot-1 copy) "Modified slot in copy")
+    (is equal "base-val-1" (base-slot-1 original) "Original simple slot is unchanged")
+
+    ;; Test with a compound slot (list) - shallow copy means the list itself is shared
+    (let* ((original-compound (make-instance 'compound-slot-test-class :data (list 1 2 3)))
+           (copy-compound (com.evocomputing.clos-helpers:shallow-copy original-compound)))
+      (false (eq original-compound copy-compound) "Shallow copy of compound class creates new instance")
+      (true (eq (data original-compound) (data copy-compound)) "Shallow copy shares compound slot value (list)")
+
+      ;; Modifying the list in the copy affects the original
+      (setf (first (data copy-compound)) 99)
+      (is equal '(99 2 3) (data copy-compound) "Modified list in copy")
+      (is equal '(99 2 3) (data original-compound) "Original list is also modified in shallow copy"))
+
+    ;; Test copying a class with no slots
+    (let* ((original-no-slots (make-instance 'no-slots-class))
+           (copy-no-slots (com.evocomputing.clos-helpers:shallow-copy original-no-slots)))
+      (false (eq original-no-slots copy-no-slots) "Shallow copy of no-slots class creates new instance"))))
+
+;; Test deep-copy
+(define-test deep-copy-tests
+  :parent clos-helpers-suite
+  (finalize-test-classes)
+  (let* ((original (make-instance 'subclass-test-class
+                                  :base-slot-1 "base-val-1"
+                                  :base-slot-2 "base-val-2"
+                                  :base-slot-3 "base-val-3"
+                                  :sub-slot-1 "sub-val-1"))
+         (copy (com.evocomputing.clos-helpers:deep-copy original)))
+
+    (false (eq original copy) "Deep copy creates a new instance")
+    (is equal (com.evocomputing.clos-helpers:to-alist original)
+          (com.evocomputing.clos-helpers:to-alist copy)
+          "Deep copy has the same slot values initially")
+
+    ;; Test modifying a simple slot in the copy
+    (setf (base-slot-1 copy) "modified-val")
+    (is equal "modified-val" (base-slot-1 copy) "Modified slot in copy")
+    (is equal "base-val-1" (base-slot-1 original) "Original simple slot is unchanged")
+
+    ;; Test with a compound slot (list) - deep copy means the list is copied
+    (let* ((original-compound (make-instance 'compound-slot-test-class :data (list 1 2 3)))
+           (copy-compound (com.evocomputing.clos-helpers:deep-copy original-compound)))
+      (false (eq original-compound copy-compound) "Deep copy of compound class creates new instance")
+      (false (eq (data original-compound) (data copy-compound)) "Deep copy does not share compound slot value (list)")
+      (is equal (data original-compound) (data copy-compound) "Deep copy has an equal list value")
+
+      ;; Modifying the list in the copy does NOT affect the original
+      (setf (first (data copy-compound)) 99)
+      (is equal '(99 2 3) (data copy-compound) "Modified list in copy")
+      (is equal '(1 2 3) (data original-compound) "Original list is unchanged in deep copy"))
+
+    ;; Test copying a class with no slots
+    (let* ((original-no-slots (make-instance 'no-slots-class))
+           (copy-no-slots (com.evocomputing.clos-helpers:deep-copy original-no-slots)))
+      (false (eq original-no-slots copy-no-slots) "Deep copy of no-slots class creates new instance")))
+
 #+(or)
 (define-test initarg-writer-tests
   :parent clos-helpers-suite
