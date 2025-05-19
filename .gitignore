@@ -21,3 +21,5 @@
 tmp/
 spec/
 implementations/
+resources/
+.aider*
