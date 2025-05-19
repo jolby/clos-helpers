@@ -200,10 +200,14 @@ the slot. First try to use the reader function, otherwise return a lambda that
 uses slot-value."
   (let ((class (ensure-class class)))
     (alexandria:if-let ((reader (slot-reader class slot-name :error-if-not-found error-if-not-found)))
-    (lambda (obj) (funcall (fdefinition reader) obj))
+    (lambda (obj)
+      (when (slot-boundp obj slot-name)
+        (funcall (fdefinition reader) obj)))
       (alexandria:if-let ((slot (slot-definition-for-name class slot-name
                                                           :error-if-not-found error-if-not-found)))
-          (lambda (obj) (slot-value obj slot-name))
+          (lambda (obj)
+            (when (slot-boundp obj slot-name)
+              (slot-value obj slot-name)))
         (when error-if-not-found
           (error "No slot definition found for ~a in ~a" slot-name class))))))
 

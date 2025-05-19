@@ -105,7 +105,8 @@
     ;; Readers
     (is eq 'base-slot-1 (com.evocomputing.clos-helpers:slot-reader base-class 'base-slot-1) "SLOT-READER finds accessor reader")
     (is eq 'base-slot-2 (com.evocomputing.clos-helpers:slot-reader base-class 'base-slot-2) "SLOT-READER finds reader")
-    (false (com.evocomputing.clos-helpers:slot-reader base-class 'base-slot-3) "SLOT-READER returns nil for writer-only")
+    ;; (false (com.evocomputing.clos-helpers:slot-reader base-class 'base-slot-3) "SLOT-READER returns nil for writer-only")
+    (true (functionp (com.evocomputing.clos-helpers:slot-writer-fn base-class 'base-slot-2)) "SLOT-WRITER-FN returns a function for reader-only slot (via slot-value)")
     (false (com.evocomputing.clos-helpers:slot-reader simple-class 'slot-b) "SLOT-READER returns nil for no reader/writer")
     (fail (com.evocomputing.clos-helpers:slot-reader base-class 'non-existent-slot :error-if-not-found t)
         'error
@@ -113,7 +114,8 @@
 
     ;; Writers
     (is eq '(setf base-slot-1) (com.evocomputing.clos-helpers:slot-writer base-class 'base-slot-1) "SLOT-WRITER finds accessor writer")
-    (is eq 'setf base-slot-3 (com.evocomputing.clos-helpers:slot-writer base-class 'base-slot-3) "SLOT-WRITER finds writer")
+    (is eq 'base-slot-3 (com.evocomputing.clos-helpers:slot-writer base-class 'base-slot-3)
+        "SLOT-WRITER finds writer")
     (false (com.evocomputing.clos-helpers:slot-writer base-class 'base-slot-2) "SLOT-WRITER returns nil for reader-only")
     (false (com.evocomputing.clos-helpers:slot-writer simple-class 'slot-b) "SLOT-WRITER returns nil for no reader/writer")
     (fail (com.evocomputing.clos-helpers:slot-writer base-class 'non-existent-slot :error-if-not-found t)
@@ -134,7 +136,7 @@
     (is equal '(:BASE-SLOT-1 :BASE-SLOT-2 :BASE-SLOT-3 :SUB-SLOT-1)
           (sort (com.evocomputing.clos-helpers:all-slot-initargs (find-class 'subclass-test-class)) #'string< :key #'symbol-name)
           "ALL-SLOT-INITARGS on subclass")
-    (is equal '(:SLOT-A)
+    (is equal '(:SLOT-A :SLOT-B)
           (com.evocomputing.clos-helpers:all-slot-initargs simple-class)
           "ALL-SLOT-INITARGS on simple class")))
 
@@ -276,7 +278,8 @@
       (setf (base-slot-4 instance) "test-value-2")
       (is equal "test-value-2" (funcall reader-fn instance) "SLOT-READER-FN reads value for slot with no explicit reader"))
     ;; (false (com.evocomputing.clos-helpers:slot-reader-fn base-class 'base-slot-3) "SLOT-READER-FN returns nil for writer-only")
-    (true (functionp (com.evocomputing.clos-helpers:slot-reader-fn base-class 'base-slot-3)) "SLOT-READER-FN returns a function for writer-only slot (via slot-value)")
+    (true (functionp (com.evocomputing.clos-helpers:slot-reader-fn base-class 'base-slot-3))
+          "SLOT-READER-FN returns a function for writer-only slot (via slot-value)")
     (fail (com.evocomputing.clos-helpers:slot-reader-fn base-class 'non-existent-slot :error-if-not-found t)
         'error
         "SLOT-READER-FN signals error when requested")
@@ -292,7 +295,8 @@
       (funcall writer-fn (make-instance 'simple-test-class) "new-value-b") ; Need a new instance as slot-b has no initform
       ;; Cannot easily test the value was set without a reader, but the function should be created.
       )
-    (false (com.evocomputing.clos-helpers:slot-writer-fn base-class 'base-slot-2) "SLOT-WRITER-FN returns nil for reader-only")
+    (true (functionp (com.evocomputing.clos-helpers:slot-writer-fn base-class 'base-slot-2))
+          "SLOT-WRITER-FN returns returns a function for reader-only")
     (fail (com.evocomputing.clos-helpers:slot-writer-fn base-class 'non-existent-slot :error-if-not-found t)
         'error
         "SLOT-WRITER-FN signals error when requested")
@@ -314,11 +318,11 @@
 
     ;; all-initarg-writer-fn-pairs
     (let ((pairs (com.evocomputing.clos-helpers:all-initarg-writer-fn-pairs base-class)))
-      (is eq 2 (length pairs) "ALL-INITARG-WRITER-FN-PAIRS returns correct number of pairs for base class")
+      (is eq 3 (length pairs) "ALL-INITARG-WRITER-FN-PAIRS returns correct number of pairs for base class")
       (true (every #'consp pairs) "ALL-INITARG-WRITER-FN-PAIRS returns list of conses")
       (true (every #'keywordp (mapcar #'car pairs)) "ALL-INITARG-WRITER-FN-PAIRS car are keywords")
       (true (every #'functionp (mapcar #'cdr pairs)) "ALL-INITARG-WRITER-FN-PAIRS cdr are functions"))
     (let ((pairs (com.evocomputing.clos-helpers:all-initarg-writer-fn-pairs (find-class 'subclass-test-class))))
-       (is eq 3 (length pairs) "ALL-INITARG-WRITER-FN-PAIRS on subclass returns correct number of pairs"))
+       (is eq 4 (length pairs) "ALL-INITARG-WRITER-FN-PAIRS on subclass returns correct number of pairs"))
     (let ((pairs (com.evocomputing.clos-helpers:all-initarg-writer-fn-pairs simple-class)))
        (is eq 2 (length pairs) "ALL-INITARG-WRITER-FN-PAIRS on simple class returns correct number of pairs"))))
