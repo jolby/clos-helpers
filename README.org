@@ -1,7 +1,5 @@
 #+title: com.evocomputing.clos-helpers - Utility toolkit for CLOS
 
-[[https://github.com/evocomputing/cogen/actions][https://github.com/evocomputing/cogen/actions/workflows/ci.yml/badge.svg]]
-
 * Introduction
 
 `com.evocomputing.clos-helpers` is a small Common Lisp library providing utility functions for inspecting and working with CLOS (Common Lisp Object System) classes and instances. It leverages the Closer to MOP (Metaobject Protocol) to offer convenient ways to retrieve slot definitions, readers, writers, initargs, and map over slot values.
@@ -197,9 +195,9 @@ Functions to get the actual function objects for readers and writers, useful for
 #+end_src
 
 #+RESULTS:
-: #<PERSON (NAME David ID ID-725)
+: #<PERSON (:NAME "David" :ID #:ID-728)
 : >
-: #<PERSON (NAME Eve CITY Star City ID ID-726)
+: #<PERSON (:NAME "Eve" :CITY "Star City" :ID #:ID-729)
 : >
 
 ** Getting Initarg/Writer Pairs
@@ -232,7 +230,7 @@ Functions to get pairs of initargs and their corresponding writer function symbo
 #+end_src
 
 #+RESULTS:
-: #<PERSON (NAME Frank AGE 50 CITY Central City ID ID-727)
+: #<PERSON (:NAME "Frank" :AGE 50 :CITY "Central City" :ID #:ID-730)
 : >
 
 * Contributing
