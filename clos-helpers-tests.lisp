@@ -22,6 +22,12 @@
   ()
   (:documentation "A class with no slots."))
 
+;; Ensure the test classes are finalized
+(com.evocomputing.clos-helpers:ensure-class 'base-test-class)
+(com.evocomputing.clos-helpers:ensure-class 'subclass-test-class)
+(com.evocomputing.clos-helpers:ensure-class 'simple-test-class)
+(com.evocomputing.clos-helpers:ensure-class 'no-slots-class)
+
 ;; Main test entry point
 (defun run-tests ()
   (parachute:test 'clos-helpers-suite))
