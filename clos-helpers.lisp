@@ -214,7 +214,7 @@ that uses setf on slot-value."
   (let ((class (ensure-class class)))
     (alexandria:if-let ((reader (slot-writer class slot-name
                                              :error-if-not-found error-if-not-found)))
-    (lambda (obj val) (funcall (fdefinition reader) obj val))
+    (lambda (obj val) (funcall (fdefinition reader) val obj))
       (alexandria:if-let ((slot (slot-definition-for-name class slot-name
                                                           :error-if-not-found error-if-not-found)))
           (lambda (obj val) (setf (slot-value obj slot-name) val))

@@ -175,7 +175,7 @@
                 :BASE-SLOT-4 "default"
                 :SUB-SLOT-1 "sub-val-1"
                 :SUB-SLOT-2 100))
-          (sort (com.evocomputing.clos-helpers:to-plist instance) #'string< :key #'symbol-name)
+          (sort (plist-to-sorted-alist (com.evocomputing.clos-helpers:to-plist instance)) #'string< :key #'car)
           "TO-PLIST on instance")))
 
 ;; Test initarg/writer pairs
@@ -186,7 +186,7 @@
         (simple-class (find-class 'simple-test-class)))
 
     ;; initarg-writer-pair
-    (is equal '(:BASE-SLOT-1 . (SETF BASE-SLOT-1))
+    (is equal '(:BASE-SLOT-1  SETF BASE-SLOT-1)
         (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-1)
         "INITARG-WRITER-PAIR finds accessor pair")
     (false (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-2) "INITARG-WRITER-PAIR returns nil for reader-only with initarg")
@@ -195,7 +195,7 @@
         "INITARG-WRITER-PAIR finds writer-only slot with initarg")
     (false (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-4)
            "INITARG-WRITER-PAIR returns nil for no initarg")
-    (is equal '(:SLOT-A . (SETF SLOT-A))
+    (is equal '(:SLOT-A SETF SLOT-A)
         (com.evocomputing.clos-helpers:initarg-writer-pair simple-class 'slot-a)
         "INITARG-WRITER-PAIR on simple class")
     (false (com.evocomputing.clos-helpers:initarg-writer-pair simple-class 'slot-b)
@@ -205,16 +205,16 @@
         "INITARG-WRITER-PAIR signals error when requested")
 
     ;; all-initarg-writer-pairs
-    (is equal '((:BASE-SLOT-1 . (SETF BASE-SLOT-1))
+    (is equal '((:BASE-SLOT-1 SETF BASE-SLOT-1)
                 (:BASE-SLOT-3 . BASE-SLOT-3))
         (sort (com.evocomputing.clos-helpers:all-initarg-writer-pairs base-class) #'string< :key #'car)
         "ALL-INITARG-WRITER-PAIRS on base class")
-    (is equal '((:BASE-SLOT-1 . (SETF BASE-SLOT-1))
+    (is equal '((:BASE-SLOT-1 SETF BASE-SLOT-1)
                 (:BASE-SLOT-3 . BASE-SLOT-3)
-                (:SUB-SLOT-1 . (SETF SUB-SLOT-1)))
+                (:SUB-SLOT-1 SETF SUB-SLOT-1))
         (sort (com.evocomputing.clos-helpers:all-initarg-writer-pairs (find-class 'subclass-test-class)) #'string< :key #'car)
         "ALL-INITARG-WRITER-PAIRS on subclass")
-    (is equal '((:SLOT-A . (SETF SLOT-A)))
+    (is equal '((:SLOT-A SETF SLOT-A))
         (com.evocomputing.clos-helpers:all-initarg-writer-pairs simple-class)
         "ALL-INITARG-WRITER-PAIRS on simple class")))
 
