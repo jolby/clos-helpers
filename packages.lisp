@@ -21,7 +21,9 @@
    #:slot-reader-fn
    #:slot-writer-fn
    #:initarg-writer-pair
-   #:all-initarg-writer-pairs))
+   #:initarg-writer-fn-pair
+   #:all-initarg-writer-pairs
+   #:all-initarg-writer-fn-pairs))
 
 (defpackage #:com.evocomputing.clos-helpers-tests
   (:use #:cl #:parachute)
