@@ -22,12 +22,18 @@
   ()
   (:documentation "A class with no slots."))
 
+(defclass compound-slot-test-class ()
+  ((id :initform (gensym "COMPOUND-ID-") :reader compound-slot-test-class-id)
+   (data :initarg :data :accessor data))
+  (:documentation "A class with a compound slot for testing copy functions."))
+
 (defun finalize-test-classes ()
   ;; Ensure the test classes are finalized
   (com.evocomputing.clos-helpers:ensure-class-finalized 'base-test-class)
   (com.evocomputing.clos-helpers:ensure-class-finalized 'subclass-test-class)
   (com.evocomputing.clos-helpers:ensure-class-finalized 'simple-test-class)
-  (com.evocomputing.clos-helpers:ensure-class-finalized 'no-slots-class))
+  (com.evocomputing.clos-helpers:ensure-class-finalized 'no-slots-class)
+  (com.evocomputing.clos-helpers:ensure-class-finalized 'compound-slot-test-class))
 
 (defun plist-to-sorted-alist (plist)
   "Helper function to convert a plist to an alist sorted by keys."
@@ -43,7 +49,15 @@
 ;; Define the main test suite
 (define-test clos-helpers-suite
   :parent NIL
-  :description "Main test suite for com.evocomputing.clos-helpers.")
+  :description "Main test suite for com.evocomputing.clos-helpers."
+  :depends-on (ensure-class-tests
+               slot-definition-tests
+               slot-access-tests
+               slot-mapping-tests
+               initarg-writer-tests
+               initarg-writer-fn-tests
+               shallow-copy-tests
+               deep-copy-tests))
 
 ;; Test ENSURE-CLASS
 (define-test ensure-class-tests
