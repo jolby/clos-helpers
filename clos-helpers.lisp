@@ -18,7 +18,7 @@
 
 ;; https://stackoverflow.com/questions/38452350/is-there-a-way-to-gather-slot-definition-readers-from-all-the-inheritance-tree
 (defun all-direct-slots (class)
-  (setf class (ensure-class class))
+  (setf class (ensure-class-finalized class))
   (append (c2mop:class-direct-slots class)
           (alexandria:mappend #'all-direct-slots
                   (c2mop:class-direct-superclasses class))))
@@ -47,10 +47,10 @@
   (slot-names (class-of object)))
 
 (defmethod slot-names ((class symbol))
-  (mapcar #'c2mop:slot-definition-name (c2mop:class-slots (ensure-class class))))
+  (mapcar #'c2mop:slot-definition-name (c2mop:class-slots (ensure-class-finalized class))))
 
 (defmethod slot-names ((class standard-class))
-  (mapcar #'c2mop:slot-definition-name (c2mop:class-slots class)))
+  (mapcar #'c2mop:slot-definition-name (c2mop:class-slots (ensure-class-finalized class))))
 
 (defgeneric direct-slot-names (object)
   (:documentation "Returns a list of slot names for the given object."))
