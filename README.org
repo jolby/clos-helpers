@@ -1,0 +1,211 @@
+#+title: com.evocomputing.clos-helpers - Utility toolkit for CLOS
+
+[[https://github.com/evocomputing/cogen/actions][https://github.com/evocomputing/cogen/actions/workflows/ci.yml/badge.svg]]
+
+* Introduction
+
+`com.evocomputing.clos-helpers` is a small Common Lisp library providing utility functions for inspecting and working with CLOS (Common Lisp Object System) classes and instances. It leverages the Closer to MOP (Metaobject Protocol) to offer convenient ways to retrieve slot definitions, readers, writers, initargs, and map over slot values.
+
+This library was extracted from the Cogen project to be a standalone, general-purpose utility.
+
+* Installation
+
+This library is not available via Quicklisp. To install it, git-clone into your quicklisp local-project directory:
+
+#+begin_src bash
+cd ~/quicklisp/local-projects
+git clone https://github.com/jolby/clos-helpers
+#+end_src
+
+Then evaluate:
+
+#+begin_src lisp
+(ql:quickload :com.evocomputing.clos-helpers)
+#+end_src
+
+#+RESULTS:
+| :COM.EVOCOMPUTING.CLOS-HELPERS |
+
+* Usage
+
+Here are some examples of how to use the functions provided by `com.evocomputing.clos-helpers`.
+
+Let's define a couple of simple classes for demonstration:
+
+#+begin_src lisp
+(defclass person ()
+  ((name :initarg :name :accessor person-name)
+   (age :initarg :age :reader person-age)
+   (city :initarg :city :writer person-city)
+   (id :initform (gensym "ID-") :reader person-id))
+  (:documentation "Represents a person."))
+
+(defclass employee (person)
+  ((employee-id :initarg :employee-id :accessor employee-id)
+   (department :initarg :department)) ; No reader/writer
+  (:documentation "Represents an employee, inheriting from person."))
+#+end_src
+
+#+RESULTS:
+: #<STANDARD-CLASS COMMON-LISP-USER::EMPLOYEE>
+
+** Getting Slot Information
+
+You can retrieve various information about the slots of a class:
+
+#+begin_src lisp
+;; This is necessary for CLOS introspection, otherwise:
+;; SB-MOP:CLASS-SLOTS called on #<STANDARD-CLASS COMMON-LISP-USER::EMPLOYEE>, which is not yet finalized.
+;;   [Condition of type SB-INT:SIMPLE-REFERENCE-ERROR]
+
+(c2mop:ensure-finalized (com.evocomputing.clos-helpers:ensure-class 'person))
+(c2mop:ensure-finalized (com.evocomputing.clos-helpers:ensure-class 'employee))
+
+
+(com.evocomputing.clos-helpers:slot-names 'employee)
+;; => (:NAME :AGE :CITY :ID :EMPLOYEE-ID :DEPARTMENT) ; Order may vary
+
+(com.evocomputing.clos-helpers:direct-slot-names 'employee)
+;; => (:EMPLOYEE-ID :DEPARTMENT) ; Order may vary
+
+(com.evocomputing.clos-helpers:all-direct-slots 'employee)
+;; => List of slot definition objects for employee and person
+
+(com.evocomputing.clos-helpers:class-slot-exists-p 'person 'name)
+;; => T
+
+(com.evocomputing.clos-helpers:class-slot-exists-p 'person 'salary)
+;; => NIL
+
+(com.evocomputing.clos-helpers:slot-definition-for-name 'person 'age)
+;; => Slot definition object for the AGE slot
+#+end_src
+
+#+RESULTS:
+: #<SB-MOP:STANDARD-DIRECT-SLOT-DEFINITION COMMON-LISP-USER::AGE>
+
+** Getting Readers, Writers, and Initargs
+
+Functions to find the associated reader, writer, or initarg for a specific slot:
+
+#+begin_src lisp
+(com.evocomputing.clos-helpers:slot-reader 'person 'name)
+;; => PERSON-NAME
+
+(com.evocomputing.clos-helpers:slot-writer 'person 'city)
+;; => (SETF PERSON-CITY)
+
+(com.evocomputing.clos-helpers:slot-initarg 'person 'age)
+;; => :AGE
+
+(com.evocomputing.clos-helpers:slot-reader 'person 'city) ; city has no reader
+;; => NIL
+
+(com.evocomputing.clos-helpers:slot-writer 'person 'age) ; age has no writer
+;; => NIL
+
+(com.evocomputing.clos-helpers:slot-initarg 'person 'id) ; id has no initarg
+;; => NIL
+#+end_src
+
+#+RESULTS:
+: NIL
+
+You can also get all initargs for a class:
+
+#+begin_src lisp
+(com.evocomputing.clos-helpers:all-slot-initargs 'employee)
+;; => (:NAME :AGE :CITY :EMPLOYEE-ID) ; Order may vary
+#+end_src
+
+** Mapping and Converting Slot Values
+
+Functions to iterate over bound slots or convert slot values to standard data structures:
+
+#+begin_src lisp
+(let ((emp (make-instance 'employee
+                          :name "Alice"
+                          :age 30
+                          :city "Wonderland"
+                          :employee-id "E123")))
+  (com.evocomputing.clos-helpers:map-slots #'list emp)
+  ;; => ( (NAME "Alice") (AGE 30) (CITY "Wonderland") (ID #:ID-1) (EMPLOYEE-ID "E123") (DEPARTMENT NIL) ) ; Order may vary, ID is a gensym
+  )
+
+(let ((emp (make-instance 'employee
+                          :name "Bob"
+                          :age 45
+                          :city "Metropolis"
+                          :employee-id "E456")))
+  (com.evocomputing.clos-helpers:to-alist emp)
+  ;; => ((NAME . "Bob") (AGE . 45) (CITY . "Metropolis") (ID . #:ID-2) (EMPLOYEE-ID . "E456") (DEPARTMENT . NIL)) ; Order may vary, ID is a gensym
+  )
+
+(let ((emp (make-instance 'employee
+                          :name "Charlie"
+                          :age 25
+                          :city "Gotham"
+                          :employee-id "E789")))
+  (com.evocomputing.clos-helpers:to-plist emp)
+  ;; => (:NAME "Charlie" :AGE 25 :CITY "Gotham" :ID #:ID-3 :EMPLOYEE-ID "E789" :DEPARTMENT NIL) ; Order may vary, ID is a gensym
+  )
+#+end_src
+
+#+RESULTS:
+| :NAME | Charlie | :AGE | 25 | :CITY | Gotham | :ID | ID-518 | :EMPLOYEE-ID | E789 |
+
+** Getting Reader/Writer Functions
+
+Functions to get the actual function objects for readers and writers, useful for programmatic access:
+
+#+begin_src lisp
+(let ((person (make-instance 'person :name "David")))
+  (let ((name-reader-fn (com.evocomputing.clos-helpers:slot-reader-fn 'person 'name))
+        (age-reader-fn (com.evocomputing.clos-helpers:slot-reader-fn 'person 'age)))
+    (format t "Name: ~A~%" (funcall name-reader-fn person))
+    (format t "Age: ~A~%" (funcall age-reader-fn person))))
+;; Output:
+;; Name: David
+;; Age: NIL ; age was not initialized
+
+(let ((person (make-instance 'person)))
+  (let ((name-writer-fn (com.evocomputing.clos-helpers:slot-writer-fn 'person 'name))
+        (city-writer-fn (com.evocomputing.clos-helpers:slot-writer-fn 'person 'city)))
+    (funcall name-writer-fn person "Eve")
+    (funcall city-writer-fn person "Star City")
+    (format t "Person: ~S~%" person)))
+;; Output:
+;; Person: #<PERSON { ... } NAME: "Eve" CITY: "Star City" ...>
+#+end_src
+
+** Getting Initarg/Writer Pairs
+
+Functions to get pairs of initargs and their corresponding writer function symbols or function objects. This is particularly useful for programmatically setting slot values from a plist of initargs.
+
+#+begin_src lisp
+(com.evocomputing.clos-helpers:initarg-writer-pair 'person 'name)
+;; => (:NAME . PERSON-NAME)
+
+(com.evocomputing.clos-helpers:all-initarg-writer-pairs 'person)
+;; => ((:NAME . PERSON-NAME) (:AGE . (SETF PERSON-AGE)) (:CITY . (SETF PERSON-CITY))) ; Order may vary
+
+(let ((person (make-instance 'person)))
+  (let ((pairs (com.evocomputing.clos-helpers:all-initarg-writer-fn-pairs 'person)))
+    ;; Example of using the pairs to set values from a plist
+    (let ((initarg-plist '(:name "Frank" :age 50 :city "Central City")))
+      (loop for (initarg . writer-fn) in pairs
+            for value = (getf initarg-plist initarg)
+            when value do
+              (funcall writer-fn person value)))
+    (format t "Person after setting: ~S~%" person)))
+;; Output:
+;; Person after setting: #<PERSON { ... } NAME: "Frank" AGE: 50 CITY: "Central City" ...>
+#+end_src
+
+* Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests on the GitHub repository.
+
+* License
+
+This library is licensed under the MIT License. See the LICENSE file for details.
