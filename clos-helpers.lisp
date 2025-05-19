@@ -101,6 +101,51 @@ This is meant to provide an easy way of showing "
 This is meant to provide an easy way of showing "
   (alexandria:flatten (map-slots (lambda (k v) (list (alexandria:make-keyword k) v)) instance)))
 
+;;;;;;;;;;;;;;; copying functions
+;;;;; shallow
+(defgeneric shallow-copy (object)
+  (:documentation "Provides a general shallow-copy function for CLOS objects. If you've got a special case, write a new defmethod."))
+
+(defmethod shallow-copy ((object standard-object))
+  "The default shallow copy specializes on STANDARD-OBJECT. It takes an object and returns a shallow copy."
+  (let ((copy (allocate-instance (class-of object))))
+    (map-slots
+     (lambda (k v) (setf (slot-value copy k) v))
+     object)
+    copy))
+
+;;;;; deep
+(defgeneric deep-copy (object)
+  (:documentation "Does a general deep-copy on the given object and sub-pieces.
+Returns atoms, numbers and chars.
+Runs copy-tree on lists, and copy-seq on other sequences.
+Runs copy-structure on pathnames, hash tables and other structure-objects"))
+
+(defmethod deep-copy (object)
+  "The default unspecialized case should only catch atoms, numbers and characters.
+It merely returns its results."
+  object)
+
+(defmethod deep-copy ((object standard-object))
+  "The default deep copy specializes on STANDARD-OBJECT. It takes an object and returns a deep copy."
+  (let ((copy (allocate-instance (class-of object))))
+    (map-slots
+     (lambda (k v) (setf (slot-value copy k) (deep-copy v)))
+     object)
+    copy))
+
+(defmethod deep-copy ((object sequence))
+  "A deep copy of a general sequence is merely (copy-seq sequence)."
+  (copy-seq object))
+
+(defmethod deep-copy ((object list))
+  "A deep copy of a list is (copy-tree list)"
+  (copy-tree object))
+
+(defmethod deep-copy ((object structure-object))
+  "A deep copy of a structure-object is (copy-structure object)."
+  (copy-structure object))
+
 (defun slot-definition-for-name (class slot-name &key (error-if-not-found nil))
   "Get the slot-definition for SLOT-NAME in CLASS, and return the slot-definition"
   (let ((dslots (all-direct-slots (ensure-class class))))
