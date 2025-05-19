@@ -4,7 +4,7 @@
 
 `com.evocomputing.clos-helpers` is a small Common Lisp library providing utility functions for inspecting and working with CLOS (Common Lisp Object System) classes and instances. It leverages the Closer to MOP (Metaobject Protocol) to offer convenient ways to retrieve slot definitions, readers, writers, initargs, and map over slot values.
 
-This library was extracted from the [[https:github.com/inaimathi/cl-mop][cl-mop project (MIT)]] and then it began to accrete more functionality as I ran across a need for utility dealing with the MOP.
+This library was extracted from the [[https://github.com/inaimathi/cl-mop][cl-mop project (MIT)]] and then it began to accrete more functionality as I ran across a need for more utilities dealing with the CLOS/MOP.
 
 * Installation
 
