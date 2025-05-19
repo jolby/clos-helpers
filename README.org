@@ -187,19 +187,23 @@ Functions to get pairs of initargs and their corresponding writer function symbo
 ;; => (:NAME . PERSON-NAME)
 
 (com.evocomputing.clos-helpers:all-initarg-writer-pairs 'person)
-;; => ((:NAME . PERSON-NAME) (:AGE . (SETF PERSON-AGE)) (:CITY . (SETF PERSON-CITY))) ; Order may vary
+;; => ((:NAME . PERSON-NAME) (:CITY . (SETF PERSON-CITY))) ; Order may vary
 
+;; Example of getting all initarg/writer-fn pairs:
+(com.evocomputing.clos-helpers:all-initarg-writer-fn-pairs 'person)
+;; => ((:NAME . #<FUNCTION ...>) (:CITY . #<FUNCTION ...>)) ; Order may vary
+
+;; Example of using the pairs to set values from a plist:
 (let ((person (make-instance 'person)))
   (let ((pairs (com.evocomputing.clos-helpers:all-initarg-writer-fn-pairs 'person)))
-    ;; Example of using the pairs to set values from a plist
-    (let ((initarg-plist '(:name "Frank" :age 50 :city "Central City")))
+    (let ((initarg-plist '(:name "Frank" :age 50 :city "Central City"))) ; Note: :age will be ignored as there's no writer-fn pair for it
       (loop for (initarg . writer-fn) in pairs
             for value = (getf initarg-plist initarg)
-            when value do
-              (funcall writer-fn person value)))
+            when (and value (not (eq value :unspecified))) ; Check if value is provided and not the default nil/unspecified
+              do (funcall writer-fn person value)))
     (format t "Person after setting: ~S~%" person)))
-;; Output:
-;; Person after setting: #<PERSON { ... } NAME: "Frank" AGE: 50 CITY: "Central City" ...>
+;; Output will show NAME and CITY set, but AGE will remain NIL (or its initform if any):
+;; Person after setting: #<PERSON { ... } NAME: "Frank" CITY: "Central City" ...>
 #+end_src
 
 * Contributing
