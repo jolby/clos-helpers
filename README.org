@@ -44,10 +44,21 @@ Let's define a couple of simple classes for demonstration:
   ((employee-id :initarg :employee-id :accessor employee-id)
    (department :initarg :department)) ; No reader/writer
   (:documentation "Represents an employee, inheriting from person."))
+
+(defmethod print-object ((p person) stream)
+  (print-unreadable-object (p stream :type t)
+    (format stream "~S~%" (com.evocomputing.clos-helpers:to-plist p))))
+
+(defmethod print-object ((e employee) stream)
+  (print-unreadable-object (e stream :type t)
+    (format stream "~S~%" (com.evocomputing.clos-helpers:to-plist e))))
+
+(values (find-class 'person)
+        (find-class 'employee))
 #+end_src
 
 #+RESULTS:
-: #<STANDARD-CLASS COMMON-LISP-USER::EMPLOYEE>
+: #<STANDARD-CLASS COMMON-LISP-USER::PERSON>, #<STANDARD-CLASS COMMON-LISP-USER::EMPLOYEE>
 
 ** Getting Slot Information
 
@@ -115,8 +126,11 @@ You can also get all initargs for a class:
 
 #+begin_src lisp
 (com.evocomputing.clos-helpers:all-slot-initargs 'employee)
-;; => (:NAME :AGE :CITY :EMPLOYEE-ID) ; Order may vary
+;; => (:NAME :AGE :CITY :EMPLOYEE-ID :DEPARTMENT) ; Order may vary
 #+end_src
+
+#+RESULTS:
+| :NAME | :AGE | :CITY | :EMPLOYEE-ID | :DEPARTMENT |
 
 ** Mapping and Converting Slot Values
 
@@ -159,11 +173,13 @@ Functions to iterate over bound slots or convert slot values to standard data st
 Functions to get the actual function objects for readers and writers, useful for programmatic access:
 
 #+begin_src lisp
+(values
 (let ((person (make-instance 'person :name "David")))
   (let ((name-reader-fn (com.evocomputing.clos-helpers:slot-reader-fn 'person 'name))
         (age-reader-fn (com.evocomputing.clos-helpers:slot-reader-fn 'person 'age)))
     (format t "Name: ~A~%" (funcall name-reader-fn person))
-    (format t "Age: ~A~%" (funcall age-reader-fn person))))
+    (format t "Age: ~A~%" (funcall age-reader-fn person)))
+  person)
 ;; Output:
 ;; Name: David
 ;; Age: NIL ; age was not initialized
@@ -173,10 +189,18 @@ Functions to get the actual function objects for readers and writers, useful for
         (city-writer-fn (com.evocomputing.clos-helpers:slot-writer-fn 'person 'city)))
     (funcall name-writer-fn person "Eve")
     (funcall city-writer-fn person "Star City")
-    (format t "Person: ~S~%" person)))
+    (format t "Person: ~S~%" person))
+  person)
+)
 ;; Output:
 ;; Person: #<PERSON { ... } NAME: "Eve" CITY: "Star City" ...>
 #+end_src
+
+#+RESULTS:
+: #<PERSON (NAME David ID ID-725)
+: >
+: #<PERSON (NAME Eve CITY Star City ID ID-726)
+: >
 
 ** Getting Initarg/Writer Pairs
 
@@ -201,10 +225,15 @@ Functions to get pairs of initargs and their corresponding writer function symbo
             for value = (getf initarg-plist initarg)
             when (and value (not (eq value :unspecified))) ; Check if value is provided and not the default nil/unspecified
               do (funcall writer-fn person value)))
-    (format t "Person after setting: ~S~%" person)))
+    (format t "Person after setting: ~S~%" person))
+  person)
 ;; Output will show NAME and CITY set, but AGE will remain NIL (or its initform if any):
 ;; Person after setting: #<PERSON { ... } NAME: "Frank" CITY: "Central City" ...>
 #+end_src
+
+#+RESULTS:
+: #<PERSON (NAME Frank AGE 50 CITY Central City ID ID-727)
+: >
 
 * Contributing
 
