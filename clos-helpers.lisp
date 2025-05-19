@@ -3,20 +3,6 @@
 ;;;; ================================================================================
 ;;;; CLOS utilities
 ;;;; ================================================================================
-;; https://stackoverflow.com/questions/38452350/is-there-a-way-to-gather-slot-definition-readers-from-all-the-inheritance-tree
-(defun all-direct-slots (class)
-  (append (c2mop:class-direct-slots class)
-          (alexandria:mappend #'all-direct-slots
-                  (c2mop:class-direct-superclasses class))))
-;;(all-direct-slots (find-class 'subclass-accessor-test))
-
-(defun all-slot-readers (class)
-  (alexandria:mappend #'c2mop:slot-definition-readers
-              (all-direct-slots class)))
-
-(defun all-slot-writers (class)
-  (alexandria:mappend #'c2mop:slot-definition-writers
-              (all-direct-slots class)))
 
 (defun ensure-class (class-or-name)
   "Ensure that CLASS-OR-NAME is a class, and return it."
@@ -25,6 +11,24 @@
     (string (find-class (intern (string-upcase class-or-name))))
     (symbol (find-class class-or-name))))
 ;; (ensure-class "standard-object")
+
+;; https://stackoverflow.com/questions/38452350/is-there-a-way-to-gather-slot-definition-readers-from-all-the-inheritance-tree
+(defun all-direct-slots (class)
+  (setf class (ensure-class class))
+  (append (c2mop:class-direct-slots class)
+          (alexandria:mappend #'all-direct-slots
+                  (c2mop:class-direct-superclasses class))))
+;;(all-direct-slots (find-class 'subclass-accessor-test))
+
+(defun all-slot-readers (class)
+  (setf class (ensure-class class))
+  (alexandria:mappend #'c2mop:slot-definition-readers
+              (all-direct-slots class)))
+
+(defun all-slot-writers (class)
+  (setf class (ensure-class class))
+  (alexandria:mappend #'c2mop:slot-definition-writers
+              (all-direct-slots class)))
 
 ;; From cl-mop
 ;; https://github.com/inaimathi/cl-mop (MIT License)
@@ -48,13 +52,13 @@
   (:documentation "Returns a list of slot names for the given object."))
 
 (defmethod direct-slot-names ((object error))
-  (slot-names (class-of object)))
+  (direct-slot-names (class-of object)))
 
 (defmethod direct-slot-names ((object standard-object))
-  (slot-names (class-of object)))
+  (direct-slot-names (class-of object)))
 
 (defmethod direct-slot-names ((class symbol))
-  (mapcar #'c2mop:slot-definition-name (c2mop:class-slots (ensure-class class))))
+  (mapcar #'c2mop:slot-definition-name (c2mop:class-direct-slots (ensure-class class))))
 
 (defmethod direct-slot-names ((class standard-class))
   (mapcar #'c2mop:slot-definition-name (c2mop:class-direct-slots class)))
@@ -241,7 +245,7 @@ that uses setf on slot-value."
                 (initarg-writer-pair class slot-name
                                      :error-if-not-found error-if-not-found
                                      :selection-heuristic selection-heuristic))
-              (direct-slot-names class))))
+              (slot-names class))))
 
 (defun initarg-writer-fn-pair (class slot-name
                                &key
@@ -271,4 +275,4 @@ that uses setf on slot-value."
                 (initarg-writer-fn-pair class slot-name
                     :error-if-not-found error-if-not-found
                     :selection-heuristic selection-heuristic))
-              (direct-slot-names class))))
+              (slot-names class))))
