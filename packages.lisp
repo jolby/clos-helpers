@@ -3,10 +3,10 @@
   (:local-nicknames
    (#:alex #:alexandria))
   (:export
+   #:ensure-class
    #:all-direct-slots
    #:all-slot-readers
    #:all-slot-writers
-   #:ensure-class
    #:slot-names
    #:direct-slot-names
    #:class-slot-exists-p
