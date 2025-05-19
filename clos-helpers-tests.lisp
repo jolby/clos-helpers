@@ -22,11 +22,12 @@
   ()
   (:documentation "A class with no slots."))
 
-;; Ensure the test classes are finalized
-(com.evocomputing.clos-helpers:ensure-class 'base-test-class)
-(com.evocomputing.clos-helpers:ensure-class 'subclass-test-class)
-(com.evocomputing.clos-helpers:ensure-class 'simple-test-class)
-(com.evocomputing.clos-helpers:ensure-class 'no-slots-class)
+(defun finalize-test-classes ()
+  ;; Ensure the test classes are finalized
+  (com.evocomputing.clos-helpers:ensure-class-finalized 'base-test-class)
+  (com.evocomputing.clos-helpers:ensure-class-finalized 'subclass-test-class)
+  (com.evocomputing.clos-helpers:ensure-class-finalized 'simple-test-class)
+  (com.evocomputing.clos-helpers:ensure-class-finalized 'no-slots-class))
 
 ;; Main test entry point
 (defun run-tests ()
@@ -40,6 +41,7 @@
 ;; Test ENSURE-CLASS
 (define-test ensure-class-tests
   :parent clos-helpers-suite
+  (finalize-test-classes)
   (is eq (find-class 'standard-object)
         (com.evocomputing.clos-helpers:ensure-class 'standard-object)
         "ENSURE-CLASS with symbol input")
@@ -53,6 +55,7 @@
 ;; Test slot name and definition functions
 (define-test slot-definition-tests
   :parent clos-helpers-suite
+  (finalize-test-classes)
   (let ((base-class (find-class 'base-test-class))
         (sub-class (find-class 'subclass-test-class))
         (simple-class (find-class 'simple-test-class))
@@ -88,6 +91,7 @@
 ;; Test reader, writer, initarg functions
 (define-test slot-access-tests
   :parent clos-helpers-suite
+  (finalize-test-classes)
   (let ((base-class (find-class 'base-test-class))
         (simple-class (find-class 'simple-test-class)))
 
@@ -130,6 +134,7 @@
 ;; Test map-slots, to-alist, to-plist
 (define-test slot-mapping-tests
   :parent clos-helpers-suite
+  (finalize-test-classes)
   (let ((instance (make-instance 'subclass-test-class
                                  :base-slot-1 "base-val-1"
                                  :base-slot-2 "base-val-2"
@@ -168,6 +173,7 @@
 ;; Test initarg/writer pairs
 (define-test initarg-writer-tests
   :parent clos-helpers-suite
+  (finalize-test-classes)
   (let ((base-class (find-class 'base-test-class))
         (simple-class (find-class 'simple-test-class)))
 
@@ -207,6 +213,7 @@
 ;; Test reader/writer function pairs
 (define-test initarg-writer-fn-tests
   :parent clos-helpers-suite
+  (finalize-test-classes)
   (let ((base-class (find-class 'base-test-class))
         (simple-class (find-class 'simple-test-class))
         (instance (make-instance 'base-test-class)))

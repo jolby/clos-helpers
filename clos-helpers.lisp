@@ -12,6 +12,10 @@
     (symbol (find-class class-or-name))))
 ;; (ensure-class "standard-object")
 
+(defun ensure-class-finalized (class-or-name)
+  "Ensure that CLASS-OR-NAME is a class, it is finalized and return it."
+  (c2mop:ensure-finalized (ensure-class class-or-name)))
+
 ;; https://stackoverflow.com/questions/38452350/is-there-a-way-to-gather-slot-definition-readers-from-all-the-inheritance-tree
 (defun all-direct-slots (class)
   (setf class (ensure-class class))

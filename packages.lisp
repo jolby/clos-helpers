@@ -4,6 +4,7 @@
    (#:alex #:alexandria))
   (:export
    #:ensure-class
+   #:ensure-class-finalized
    #:all-direct-slots
    #:all-slot-readers
    #:all-slot-writers
