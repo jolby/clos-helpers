@@ -14,6 +14,8 @@
    #:map-slots
    #:to-alist
    #:to-plist
+   #:shallow-copy
+   #:deep-copy
    #:slot-definition-for-name
    #:slot-initarg
    #:all-slot-initargs

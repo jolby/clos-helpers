@@ -49,15 +49,7 @@
 ;; Define the main test suite
 (define-test clos-helpers-suite
   :parent NIL
-  :description "Main test suite for com.evocomputing.clos-helpers."
-  :depends-on (ensure-class-tests
-               slot-definition-tests
-               slot-access-tests
-               slot-mapping-tests
-               initarg-writer-tests
-               initarg-writer-fn-tests
-               shallow-copy-tests
-               deep-copy-tests))
+  :description "Main test suite for com.evocomputing.clos-helpers.")
 
 ;; Test ENSURE-CLASS
 (define-test ensure-class-tests
@@ -307,47 +299,8 @@
     ;; Test copying a class with no slots
     (let* ((original-no-slots (make-instance 'no-slots-class))
            (copy-no-slots (com.evocomputing.clos-helpers:deep-copy original-no-slots)))
-      (false (eq original-no-slots copy-no-slots) "Deep copy of no-slots class creates new instance")))
+      (false (eq original-no-slots copy-no-slots) "Deep copy of no-slots class creates new instance"))))
 
-#+(or)
-(define-test initarg-writer-tests
-  :parent clos-helpers-suite
-  (finalize-test-classes)
-  (let ((base-class (find-class 'base-test-class))
-        (simple-class (find-class 'simple-test-class)))
-
-    ;; initarg-writer-pair
-    (is equal '(:BASE-SLOT-1 . BASE-SLOT-1)
-          (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-1)
-          "INITARG-WRITER-PAIR finds accessor pair")
-    (false (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-2) "INITARG-WRITER-PAIR returns nil for reader-only with initarg")
-    (is equal '(:BASE-SLOT-3 . (SETF BASE-SLOT-3))
-          (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-3)
-          "INITARG-WRITER-PAIR finds writer-only slot with initarg")
-    (false (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'base-slot-4)
-              "INITARG-WRITER-PAIR returns nil for no initarg")
-    (is equal '(:SLOT-A . (SETF SLOT-A))
-          (com.evocomputing.clos-helpers:initarg-writer-pair simple-class 'slot-a)
-          "INITARG-WRITER-PAIR on simple class")
-    (false (com.evocomputing.clos-helpers:initarg-writer-pair simple-class 'slot-b)
-              "INITARG-WRITER-PAIR returns nil for slot with no initarg/writer")
-    (fail (com.evocomputing.clos-helpers:initarg-writer-pair base-class 'non-existent-slot :error-if-not-found t)
-        'error
-        "INITARG-WRITER-PAIR signals error when requested")
-
-    ;; all-initarg-writer-pairs
-    (is equal '((:BASE-SLOT-1 . BASE-SLOT-1)
-                (:BASE-SLOT-3 . (SETF BASE-SLOT-3)))
-          (sort (com.evocomputing.clos-helpers:all-initarg-writer-pairs base-class) #'string< :key #'car)
-          "ALL-INITARG-WRITER-PAIRS on base class")
-    (is equal '((:BASE-SLOT-1 . BASE-SLOT-1)
-                (:BASE-SLOT-3 . (SETF BASE-SLOT-3))
-                (:SUB-SLOT-1 . SUB-SLOT-1))
-          (sort (com.evocomputing.clos-helpers:all-initarg-writer-pairs (find-class 'subclass-test-class)) #'string< :key #'car)
-          "ALL-INITARG-WRITER-PAIRS on subclass")
-    (is equal '((:SLOT-A . (SETF SLOT-A)))
-          (com.evocomputing.clos-helpers:all-initarg-writer-pairs simple-class)
-          "ALL-INITARG-WRITER-PAIRS on simple class")))
 
 ;; Test reader/writer function pairs
 (define-test initarg-writer-fn-tests
